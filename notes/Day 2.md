@@ -1,0 +1,1 @@
+Created Next.js app, deployed to Vercel (https://fantasy-bets.vercel.app/)"
