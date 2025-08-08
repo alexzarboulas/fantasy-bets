@@ -1,0 +1,1 @@
+Installed & configured TailwindCSS, added base styles, built responsive header with mobile menu, committed & deployed to Vercel
