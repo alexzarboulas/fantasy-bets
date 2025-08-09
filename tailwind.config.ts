@@ -1,16 +1,16 @@
 // tailwind.config.ts
 import type { Config } from "tailwindcss";
 
-const config: Config = {
-  content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+const config = {
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        brand: "#0b1020",
+        ink: "#e6e8ef",
+      },
+    },
   },
   plugins: [],
-};
+} satisfies Config;
 
 export default config;
