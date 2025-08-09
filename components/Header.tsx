@@ -14,9 +14,9 @@ export default function Header() {
           <Menu className="h-4 w-4" />
         </button>
 
-        {/* CENTER: absolutely centered title, independent of side widths */}
+        {/* Absolutely centered title (not affected by side widths) */}
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <h1 className="text-sm font-medium tracking-tight">Fantasy Bets</h1>
+          <span className="text-sm font-medium tracking-tight">Fantasy Bets</span>
         </div>
 
         {/* Right: Profile + Settings */}
