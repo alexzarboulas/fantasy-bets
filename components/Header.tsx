@@ -5,7 +5,10 @@ import { Menu, User, Settings } from "lucide-react";
 export default function Header() {
   return (
     <header className="sticky top-0 z-50 h-12 bg-neutral-900/80 backdrop-blur text-white border-b border-white/10">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 h-full grid grid-cols-3 items-center">
+      <div
+        className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 h-full grid items-center"
+        style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center" }}
+      >
         {/* Left: Menu */}
         <div className="justify-self-start">
           <button
