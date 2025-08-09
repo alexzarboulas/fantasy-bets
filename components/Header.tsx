@@ -4,9 +4,8 @@ import { Menu, User, Settings } from "lucide-react";
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-50 bg-neutral-900 text-white border-b border-white/10 h-12">
-      {/* 3‑column grid keeps the title centered even if right side is wider */}
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 h-full grid grid-cols-[auto_1fr_auto] items-center">
+    <header className="sticky top-0 z-50 h-12 bg-neutral-900 text-white border-b border-white/10">
+      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
         {/* Left: Menu */}
         <button
           aria-label="Open menu"
@@ -15,13 +14,13 @@ export default function Header() {
           <Menu className="h-4 w-4" />
         </button>
 
-        {/* Center: Title (always centered) */}
-        <h1 className="justify-self-center text-sm font-medium tracking-tight">
-          Fantasy Bets
-        </h1>
+        {/* CENTER: absolutely centered title, independent of side widths */}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <h1 className="text-sm font-medium tracking-tight">Fantasy Bets</h1>
+        </div>
 
         {/* Right: Profile + Settings */}
-        <div className="justify-self-end flex items-center gap-1">
+        <div className="flex items-center gap-1">
           <Link
             href="/account"
             aria-label="Account"
