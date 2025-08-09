@@ -15,7 +15,8 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-neutral-950/70 backdrop-blur">
-      <div className="container-px mx-auto flex h-14 items-center justify-between">
+      {/* polished container: max width + consistent page padding */}
+      <div className="mx-auto max-w-6xl container-px flex h-14 items-center justify-between">
         {/* Left: Brand */}
         <div className="flex items-center gap-3">
           <button
@@ -81,7 +82,7 @@ export default function Header() {
       {/* Mobile drawer */}
       {open && (
         <nav className="sm:hidden border-t border-white/10 bg-neutral-950">
-          <ul className="container-px mx-auto py-2 space-y-1">
+          <ul className="container-px mx-auto max-w-6xl py-2 space-y-1">
             {/* Optional inline search on mobile */}
             <li className="mb-1">
               <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2">
