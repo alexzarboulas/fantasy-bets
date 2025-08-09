@@ -1,4 +1,3 @@
-// tailwind.config.ts
 import type { Config } from "tailwindcss";
 
 const config: Config = {
@@ -8,7 +7,18 @@ const config: Config = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+      },
+      colors: {
+        brand: {
+          50: "#eef2ff",
+          500: "#6366f1",
+          700: "#4338ca",
+        },
+      },
+    },
   },
   plugins: [],
 };
