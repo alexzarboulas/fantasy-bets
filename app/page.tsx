@@ -22,21 +22,80 @@ export default function Home() {
       {/* Big black square with tabs */}
       <section className="mx-auto w-[min(90vw,42rem)]">
         <div className="aspect-square bg-[#000] text-white rounded-2xl border border-white/10 shadow-lg overflow-hidden">
-          {/* Tabs header */}
-          <div className="px-4 sm:px-6 pt-4">
-            <div
-              role="tablist"
-              aria-label="Prediction categories"
-              className="flex flex-wrap items-center gap-2"
-            >
-              {/* ... your tab buttons ... */}
-            </div>
-            <div className="mt-3 h-px w-full bg-white/10" aria-hidden />
+          {/* Tab strip: full-width, equal columns, rectangular */}
+          <div
+            role="tablist"
+            aria-label="Prediction categories"
+            className="grid grid-cols-5 h-12 rounded-t-2xl overflow-hidden"
+          >
+            {TABS.map((tab) => {
+              const id = tab.toLowerCase();
+              const isActive = active === tab;
+              return (
+                <button
+                  key={tab}
+                  id={`tab-${id}`}
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-controls={`panel-${id}`}
+                  onClick={() => setActive(tab)}
+                  className={[
+                    'w-full h-full flex items-center justify-center',
+                    'text-xs sm:text-sm font-medium',
+                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/40',
+                    isActive
+                      ? 'border-b-2 border-indigo-500 text-white'
+                      : 'border-b-2 border-transparent text-white/70 hover:text-white hover:bg-white/5'
+                  ].join(' ')}
+                >
+                  {tab}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Tab content */}
+          {/* Content */}
           <div className="px-4 sm:px-6 py-6">
-            {/* ... your tab panels ... */}
+            <div
+              id="panel-world"
+              role="tabpanel"
+              aria-labelledby="tab-world"
+              hidden={active !== 'World'}
+            >
+              <p className="text-white/70">World content coming soon.</p>
+            </div>
+            <div
+              id="panel-absurd"
+              role="tabpanel"
+              aria-labelledby="tab-absurd"
+              hidden={active !== 'Absurd'}
+            >
+              <p className="text-white/70">Absurd bets go here.</p>
+            </div>
+            <div
+              id="panel-politics"
+              role="tabpanel"
+              aria-labelledby="tab-politics"
+              hidden={active !== 'Politics'}
+            >
+              <p className="text-white/70">Politics predictions coming soon.</p>
+            </div>
+            <div
+              id="panel-sports"
+              role="tabpanel"
+              aria-labelledby="tab-sports"
+              hidden={active !== 'Sports'}
+            >
+              <p className="text-white/70">Sports lines and props here.</p>
+            </div>
+            <div
+              id="panel-weather"
+              role="tabpanel"
+              aria-labelledby="tab-weather"
+              hidden={active !== 'Weather'}
+            >
+              <p className="text-white/70">Weather wagers coming soon.</p>
+            </div>
           </div>
         </div>
       </section>
