@@ -4,6 +4,7 @@ import { AlignJustify, User, Settings } from "lucide-react";
 
 export default function Header() {
   return (
+    
     <header className="sticky top-0 z-50 h-12 bg-neutral-900/80 backdrop-blur text-white border-b border-white/10">
       {/* SINGLE ROW */}
 
@@ -19,7 +20,7 @@ export default function Header() {
         {/* Center: True center */}
         <Link
         href="/"
-        className="absolute left-1/2 -translate-x-1/2 text-sm sm:text-base font-semibold tracking-tight no-underline text-black visited:text-black"
+        className="absolute left-1/2 -translate-x-1/2 text-sm sm:text-base font-semibold tracking-tight no-underline text-white visited:text-white"
       >
         fantasy bets
       </Link>
@@ -31,14 +32,14 @@ export default function Header() {
             aria-label="Settings"
             className="inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-white/10"
           >
-             <Settings className="h-4 w-4" color="black" /> 
+             <Settings className="h-4 w-4" color="white" /> 
           </Link>
           <Link
             href="/account"
             aria-label="Account"
             className="inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-white/10"
           >
-            <User className="h-4 w-4" color="black" />
+            <User className="h-4 w-4" color="white" />
           </Link>
         </div>
       </div>
