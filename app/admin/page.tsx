@@ -19,34 +19,60 @@ type BetsMap = Partial<Record<Tab, Bet[]>>;
 
 const STORAGE_KEY = "fantasy-bets:bets";
 
+// ---------- utils ----------
 function clamp01(v: number) {
   return Math.max(0, Math.min(100, Math.round(v)));
 }
 function newId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
-function normalizeBet(b: any): Bet {
-  return {
-    id: typeof b?.id === "string" ? b.id : newId(),
-    prompt: String(b?.prompt ?? "").trim(),
-    yesPct: clamp01(Number(b?.yesPct ?? 50)),
-    noPct: clamp01(Number(b?.noPct ?? 50)),
-    createdAt: typeof b?.createdAt === "number" ? b.createdAt : Date.now(),
-  };
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
 }
-function migrate(input: any): BetsMap {
+function toNumber(v: unknown): number | undefined {
+  const n = typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN;
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function normalizeBet(input: unknown): Bet {
+  const r = isRecord(input) ? input : {};
+
+  const prompt =
+    typeof r.prompt === "string" ? r.prompt.trim() : "";
+
+  const yesRaw = toNumber(r.yesPct);
+  const noRaw = toNumber(r.noPct);
+  const yesPct = clamp01(yesRaw ?? 50);
+  const noPct = clamp01(noRaw ?? 50);
+
+  const createdAt =
+    typeof r.createdAt === "number" && Number.isFinite(r.createdAt)
+      ? r.createdAt
+      : Date.now();
+
+  const id = typeof r.id === "string" ? r.id : newId();
+
+  return { id, prompt, yesPct, noPct, createdAt };
+}
+
+function migrate(input: unknown): BetsMap {
   const out: BetsMap = {};
+  const root = isRecord(input) ? input : {};
+
   for (const tab of TABS) {
-    const v = input?.[tab];
+    const v = root[tab as keyof typeof root];
+
     if (Array.isArray(v)) {
       out[tab] = v.map(normalizeBet);
-    } else if (v && typeof v === "object") {
+    } else if (isRecord(v)) {
       // old format: single object → wrap in array
       out[tab] = [normalizeBet(v)];
-    } // else undefined → leave empty
+    }
+    // else: leave undefined
   }
   return out;
 }
+// --------------------------------
 
 export default function AdminPage() {
   const [category, setCategory] = useState<Tab>("World");
@@ -60,10 +86,9 @@ export default function AdminPage() {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : {};
+      const parsed: unknown = raw ? JSON.parse(raw) : {};
       const migrated = migrate(parsed);
       setData(migrated);
-      // write back in new format so future loads are clean
       localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
     } catch {
       setData({});
@@ -119,6 +144,7 @@ export default function AdminPage() {
   };
 
   const deleteBet = (id: string) => {
+    if (!confirm("Delete this bet?")) return;
     const curr = data[category] ?? [];
     const nextArr = curr.filter((b) => b.id !== id);
     const next: BetsMap = { ...data, [category]: nextArr };
