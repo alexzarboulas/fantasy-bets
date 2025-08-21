@@ -1,14 +1,10 @@
 import { MongoClient } from "mongodb";
 
 const uri = process.env.MONGODB_URI;
-if (!uri) {
-  throw new Error("Please set MONGODB_URI in your .env.local");
-}
+if (!uri) throw new Error("Please set MONGODB_URI in your .env.local");
 
-// Create a single client and share its connection promise across hot reloads in dev
+// Reuse the client across hot-reloads in dev
 declare global {
-  // Re-declare on the Node global in dev to avoid multiple connections
-  // (no need to disable eslint rules here)
   // eslint-disable-next-line no-var
   var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
