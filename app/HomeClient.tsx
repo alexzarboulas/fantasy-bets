@@ -5,33 +5,54 @@ import { useEffect, useMemo, useState } from 'react';
 const TABS = ['World', 'Absurd', 'Politics', 'Sports', 'Weather'] as const;
 type Tab = typeof TABS[number];
 
-type Bet = { _id: string; tab: Tab; prompt: string; yesPct: number; noPct: number; createdAt: string };
+type Bet = {
+  id: string;
+  tab: Tab;
+  prompt: string;
+  yesPct: number;
+  noPct: number;
+  createdAt: string; // ISO
+};
+
 type BetsByTab = Record<Tab, Bet[]>;
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return v !== null && typeof v === 'object';
+}
+function parseItems(d: unknown): Bet[] {
+  if (!isRecord(d)) return [];
+  const items = (d as { items?: unknown }).items;
+  if (!Array.isArray(items)) return [];
+  const out: Bet[] = [];
+  for (const it of items) {
+    if (!isRecord(it)) continue;
+    const id = typeof it.id === 'string' ? it.id : '';
+    const tab = typeof it.tab === 'string' ? it.tab : '';
+    const prompt = typeof it.prompt === 'string' ? it.prompt : '';
+    const yesPct = typeof it.yesPct === 'number' ? it.yesPct : NaN;
+    const noPct = typeof it.noPct === 'number' ? it.noPct : NaN;
+    const createdAt = typeof it.createdAt === 'string' ? it.createdAt : '';
+    if (id && prompt && createdAt && (['World','Absurd','Politics','Sports','Weather'] as string[]).includes(tab) && Number.isFinite(yesPct) && Number.isFinite(noPct)) {
+      out.push({ id, tab: tab as Tab, prompt, yesPct, noPct, createdAt });
+    }
+  }
+  return out;
+}
 
 export default function HomeClient() {
   const [active, setActive] = useState<Tab>('World');
   const [betsByTab, setBetsByTab] = useState<Partial<BetsByTab>>({});
   const [selectedById, setSelectedById] = useState<Record<string, 'Yes' | 'No' | null>>({});
 
-  // fetch helper
   async function loadTab(tab: Tab) {
     const res = await fetch(`/api/bets?tab=${encodeURIComponent(tab)}`, { cache: 'no-store' });
     const data = await res.json();
-    const list: Bet[] = (data.items ?? []).map((b: any) => ({
-      _id: b._id,
-      tab: b.tab,
-      prompt: b.prompt,
-      yesPct: b.yesPct,
-      noPct: b.noPct,
-      createdAt: b.createdAt,
-    }));
+    const list = parseItems(data);
     setBetsByTab(prev => ({ ...prev, [tab]: list }));
   }
 
-  // Load when tab changes
   useEffect(() => { loadTab(active); }, [active]);
 
-  // Refresh current tab on focus
   useEffect(() => {
     const onFocus = () => loadTab(active);
     window.addEventListener('focus', onFocus);
@@ -105,12 +126,12 @@ export default function HomeClient() {
               )}
 
               {list.map((b) => {
-                const sel = selectedById[b._id] ?? null;
+                const sel = selectedById[b.id] ?? null;
                 const yesPctClass = sel === 'Yes' ? 'text-white' : 'text-green-600';
                 const noPctClass  = sel === 'No'  ? 'text-white' : 'text-red-600';
 
                 return (
-                  <div key={b._id} className="mx-auto max-w-sm">
+                  <div key={b.id} className="mx-auto max-w-sm">
                     <div className="rounded-xl bg-indigo-300 text-black shadow-lg transition-transform duration-150 hover:-translate-y-0.5 hover:shadow-2xl">
                       <div className="px-4 pt-4 pb-3">
                         <h3 className="text-base font-semibold leading-tight">{b.prompt}</h3>
@@ -121,7 +142,7 @@ export default function HomeClient() {
                           type="button"
                           role="radio"
                           aria-checked={sel === 'Yes'}
-                          onClick={() => toggle(b._id, 'Yes')}
+                          onClick={() => toggle(b.id, 'Yes')}
                           className={[
                             'h-11 px-4 flex items-center justify-between text-sm font-medium',
                             'rounded-bl-xl',
@@ -138,7 +159,7 @@ export default function HomeClient() {
                           type="button"
                           role="radio"
                           aria-checked={sel === 'No'}
-                          onClick={() => toggle(b._id, 'No')}
+                          onClick={() => toggle(b.id, 'No')}
                           className={[
                             'h-11 px-4 flex items-center justify-between text-sm font-medium',
                             'rounded-br-xl',

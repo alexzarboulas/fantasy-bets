@@ -6,27 +6,40 @@ import { authOptions } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
-export async function PATCH(_: Request, { params }: { params: { id: string } }) {
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return v !== null && typeof v === "object";
+}
+
+export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  let _id: ObjectId;
+  try {
+    _id = new ObjectId(params.id);
+  } catch {
+    return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+  }
+
+  const bodyUnknown = await req.json().catch(() => null);
+  if (!isRecord(bodyUnknown)) return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+
+  const update: Partial<{ prompt: string; yesPct: number; noPct: number }> = {};
+  if (typeof bodyUnknown.prompt === "string") update.prompt = bodyUnknown.prompt.trim();
+  if (typeof bodyUnknown.yesPct === "number") update.yesPct = Math.round(bodyUnknown.yesPct);
+  if (typeof bodyUnknown.noPct === "number") update.noPct = Math.round(bodyUnknown.noPct);
 
   const client = await clientPromise;
   const db = client.db();
   const col = db.collection("bets");
 
-  const _id = new ObjectId(params.id);
-  const body = await _.json().catch(() => ({}));
-
   const existing = await col.findOne({ _id });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (existing.authorId && existing.authorId !== (session as any).userId) {
+
+  const userId = (session as { userId?: string }).userId;
+  if (existing.authorId && userId && existing.authorId !== userId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-
-  const update: any = {};
-  if (typeof body.prompt === "string") update.prompt = body.prompt.trim();
-  if (Number.isFinite(body.yesPct)) update.yesPct = Number(body.yesPct);
-  if (Number.isFinite(body.noPct)) update.noPct = Number(body.noPct);
 
   await col.updateOne({ _id }, { $set: update });
   return NextResponse.json({ ok: true });
@@ -36,14 +49,22 @@ export async function DELETE(_: Request, { params }: { params: { id: string } })
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  let _id: ObjectId;
+  try {
+    _id = new ObjectId(params.id);
+  } catch {
+    return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+  }
+
   const client = await clientPromise;
   const db = client.db();
   const col = db.collection("bets");
 
-  const _id = new ObjectId(params.id);
   const existing = await col.findOne({ _id });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (existing.authorId && existing.authorId !== (session as any).userId) {
+
+  const userId = (session as { userId?: string }).userId;
+  if (existing.authorId && userId && existing.authorId !== userId) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
