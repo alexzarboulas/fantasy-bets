@@ -6,11 +6,13 @@ import { authOptions } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
+type Ctx = { params: { id: string } };
+
 function isRecord(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === "object";
 }
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: Ctx) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -21,13 +23,13 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
   }
 
-  const bodyUnknown = await req.json().catch(() => null);
-  if (!isRecord(bodyUnknown)) return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  const body = await request.json().catch(() => null);
+  if (!isRecord(body)) return NextResponse.json({ error: "Invalid body" }, { status: 400 });
 
   const update: Partial<{ prompt: string; yesPct: number; noPct: number }> = {};
-  if (typeof bodyUnknown.prompt === "string") update.prompt = bodyUnknown.prompt.trim();
-  if (typeof bodyUnknown.yesPct === "number") update.yesPct = Math.round(bodyUnknown.yesPct);
-  if (typeof bodyUnknown.noPct === "number") update.noPct = Math.round(bodyUnknown.noPct);
+  if (typeof body.prompt === "string") update.prompt = body.prompt.trim();
+  if (typeof body.yesPct === "number") update.yesPct = Math.round(body.yesPct);
+  if (typeof body.noPct === "number") update.noPct = Math.round(body.noPct);
 
   const client = await clientPromise;
   const db = client.db();
@@ -45,7 +47,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: Ctx) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
