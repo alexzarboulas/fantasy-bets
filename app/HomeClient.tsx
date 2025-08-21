@@ -5,46 +5,43 @@ import { useEffect, useMemo, useState } from 'react';
 const TABS = ['World', 'Absurd', 'Politics', 'Sports', 'Weather'] as const;
 type Tab = typeof TABS[number];
 
-type Bet = { id: string; prompt: string; yesPct: number; noPct: number; createdAt: number };
-type BetsMap = Partial<Record<Tab, Bet[]>>;
-
-const STORAGE_KEY = 'fantasy-bets:bets';
+type Bet = { _id: string; tab: Tab; prompt: string; yesPct: number; noPct: number; createdAt: string };
+type BetsByTab = Record<Tab, Bet[]>;
 
 export default function HomeClient() {
   const [active, setActive] = useState<Tab>('World');
-  const [bets, setBets] = useState<BetsMap>({});
-  // per-card selection: { [betId]: 'Yes' | 'No' | null }
+  const [betsByTab, setBetsByTab] = useState<Partial<BetsByTab>>({});
   const [selectedById, setSelectedById] = useState<Record<string, 'Yes' | 'No' | null>>({});
 
-  // Load once
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      setBets(raw ? JSON.parse(raw) : {});
-    } catch {}
-  }, []);
+  // fetch helper
+  async function loadTab(tab: Tab) {
+    const res = await fetch(`/api/bets?tab=${encodeURIComponent(tab)}`, { cache: 'no-store' });
+    const data = await res.json();
+    const list: Bet[] = (data.items ?? []).map((b: any) => ({
+      _id: b._id,
+      tab: b.tab,
+      prompt: b.prompt,
+      yesPct: b.yesPct,
+      noPct: b.noPct,
+      createdAt: b.createdAt,
+    }));
+    setBetsByTab(prev => ({ ...prev, [tab]: list }));
+  }
 
-  // Refresh on focus/storage (when returning from /admin)
-  useEffect(() => {
-    const refresh = () => {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        setBets(raw ? JSON.parse(raw) : {});
-      } catch {}
-    };
-    window.addEventListener('focus', refresh);
-    window.addEventListener('storage', refresh);
-    return () => {
-      window.removeEventListener('focus', refresh);
-      window.removeEventListener('storage', refresh);
-    };
-  }, []);
+  // Load when tab changes
+  useEffect(() => { loadTab(active); }, [active]);
 
-  // List for active tab (newest first)
+  // Refresh current tab on focus
+  useEffect(() => {
+    const onFocus = () => loadTab(active);
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [active]);
+
   const list = useMemo<Bet[]>(() => {
-    const arr = bets[active] ?? [];
-    return arr.slice().sort((a, b) => b.createdAt - a.createdAt);
-  }, [bets, active]);
+    const arr = betsByTab[active] ?? [];
+    return arr.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [betsByTab, active]);
 
   const toggle = (id: string, val: 'Yes' | 'No') =>
     setSelectedById((prev) => ({ ...prev, [id]: prev[id] === val ? null : val }));
@@ -60,20 +57,17 @@ export default function HomeClient() {
         <p className="mx-auto max-w-2xl text-gray-300">
           Let the model do the bookmaking. You do the guessing.
         </p>
-        {/*<a href="/admin" className="text-sm underline text-indigo-300">Edit bets</a>*/}
       </section>
 
       {/* Category panel */}
       <section className="mx-auto w-[min(90vw,42rem)]">
         <div className="bg-black text-white rounded-2xl border border-neutral-700 shadow-lg overflow-hidden">
-          {/* Make the entire inner panel scrollable so sticky children work */}
           <div className="max-h-[70vh] overflow-y-auto">
-            {/* Panel label (sticky) */}
             <div className="px-4 sm:px-6 py-3 bg-black text-indigo-300 text-xs sm:text-sm font-semibold tracking-wide uppercase text-center border-b border-neutral-800 sticky top-0 z-20">
               Weekly Bet Board
             </div>
 
-            {/* Tabs (sticky under the label) */}
+            {/* Tabs */}
             <div
               role="tablist"
               aria-label="Prediction categories"
@@ -102,41 +96,32 @@ export default function HomeClient() {
               })}
             </div>
 
-            {/* Content (scrolls) */}
+            {/* Content */}
             <div className="px-4 sm:px-6 py-6 space-y-12 pr-1">
               {list.length === 0 && (
                 <p className="text-sm text-neutral-400">
-                  No bets saved for <span className="font-medium">{active}</span>. Add some in <a href="/admin" className="underline">/admin</a>.
+                  No bets saved for <span className="font-medium">{active}</span>.
                 </p>
               )}
 
               {list.map((b) => {
-                const sel = selectedById[b.id] ?? null;
+                const sel = selectedById[b._id] ?? null;
                 const yesPctClass = sel === 'Yes' ? 'text-white' : 'text-green-600';
                 const noPctClass  = sel === 'No'  ? 'text-white' : 'text-red-600';
 
                 return (
-                  <div key={b.id} className="mx-auto max-w-sm">
-                    {/* Card */}
+                  <div key={b._id} className="mx-auto max-w-sm">
                     <div className="rounded-xl bg-indigo-300 text-black shadow-lg transition-transform duration-150 hover:-translate-y-0.5 hover:shadow-2xl">
-                      {/* Title */}
                       <div className="px-4 pt-4 pb-3">
-                        <h3 className="text-base font-semibold leading-tight">
-                          {b.prompt}
-                        </h3>
+                        <h3 className="text-base font-semibold leading-tight">{b.prompt}</h3>
                       </div>
-
-                      {/* Divider */}
                       <div className="h-px w-full bg-black/20" aria-hidden />
-
-                      {/* Yes / No segmented buttons */}
                       <div role="radiogroup" aria-label="Select outcome" className="grid grid-cols-2">
-                        {/* YES */}
                         <button
                           type="button"
                           role="radio"
                           aria-checked={sel === 'Yes'}
-                          onClick={() => toggle(b.id, 'Yes')}
+                          onClick={() => toggle(b._id, 'Yes')}
                           className={[
                             'h-11 px-4 flex items-center justify-between text-sm font-medium',
                             'rounded-bl-xl',
@@ -149,13 +134,11 @@ export default function HomeClient() {
                           <span>Yes</span>
                           <span className={['tabular-nums', yesPctClass].join(' ')}>{b.yesPct}%</span>
                         </button>
-
-                        {/* NO */}
                         <button
                           type="button"
                           role="radio"
                           aria-checked={sel === 'No'}
-                          onClick={() => toggle(b.id, 'No')}
+                          onClick={() => toggle(b._id, 'No')}
                           className={[
                             'h-11 px-4 flex items-center justify-between text-sm font-medium',
                             'rounded-br-xl',
@@ -174,6 +157,7 @@ export default function HomeClient() {
                 );
               })}
             </div>
+
           </div>
         </div>
       </section>
