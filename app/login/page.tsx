@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -11,28 +12,69 @@ export default function LoginPage() {
   const router = useRouter();
 
   return (
-    <div className="mx-auto max-w-sm p-6 rounded-2xl bg-white/5">
-      <h1 className="text-xl font-semibold mb-4">Log in</h1>
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          setLoading(true);
-          const res = await signIn("credentials", { redirect: false, email, password });
-          setLoading(false);
-          if (!res?.error) router.push("/"); // redirect to main page
-          else alert(res.error);
-        }}
-        className="space-y-3"
-      >
-        <input className="w-full p-2 rounded bg-white/10" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input className="w-full p-2 rounded bg-white/10" type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <button className="w-full p-2 rounded bg-white/20 hover:bg-white/30" disabled={loading}>
-          {loading ? "Signing in..." : "Sign in"}
-        </button>
-      </form>
-      <p className="mt-3 text-sm text-gray-400">
-        No account? <Link className="underline" href="/register">Create one</Link>
-      </p>
-    </div>
+    <main className="min-h-screen flex items-center justify-center px-4">
+      <div className="w-full max-w-sm rounded-2xl border border-neutral-700 bg-black/60 p-6 shadow-lg transform -translate-y-10 sm:-translate-y-14 md:-translate-y-20">
+        <h1 className="text-xl font-semibold text-white mb-1">Log in</h1>
+        <p className="text-sm text-neutral-400 mb-5">
+          Welcome back — please enter your details.
+        </p>
+
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setLoading(true);
+            const res = await signIn("credentials", {
+              redirect: false,
+              email,
+              password,
+            });
+            setLoading(false);
+            if (!res?.error) router.push("/");
+            else alert(res.error);
+          }}
+          className="space-y-3"
+        >
+          <label className="block">
+            <span className="block text-xs text-neutral-300 mb-1">Email</span>
+            <input
+              className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/40"
+              placeholder="you@example.com"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </label>
+
+          <label className="block">
+            <span className="block text-xs text-neutral-300 mb-1">Password</span>
+            <input
+              className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-white placeholder-neutral-500 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/40"
+              placeholder="••••••••"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </label>
+
+          <button
+            className="mt-2 w-full rounded-lg bg-indigo-300 px-3 py-2 font-medium text-black hover:bg-indigo-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+            disabled={loading}
+          >
+            {loading ? "Signing in…" : "Sign in"}
+          </button>
+        </form>
+
+        <p className="mt-4 text-sm text-neutral-400">
+          No account?{" "}
+          <Link href="/register" className="text-indigo-300 underline-offset-4 hover:underline">
+            Create one
+          </Link>
+        </p>
+      </div>
+    </main>
   );
 }
