@@ -6,13 +6,13 @@ import { authOptions } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
-type Ctx = { params: { id: string } };
-
+// Small helper
 function isRecord(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === "object";
 }
 
-export async function PATCH(request: Request, { params }: Ctx) {
+export async function PATCH(request: Request, context: unknown) {
+  const { params } = (context as { params: { id: string } });
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -23,7 +23,9 @@ export async function PATCH(request: Request, { params }: Ctx) {
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
   }
 
-  const body = await request.json().catch(() => null);
+  const body = await request.json().catch(() => null) as
+    | { prompt?: string; yesPct?: number; noPct?: number }
+    | null;
   if (!isRecord(body)) return NextResponse.json({ error: "Invalid body" }, { status: 400 });
 
   const update: Partial<{ prompt: string; yesPct: number; noPct: number }> = {};
@@ -47,7 +49,8 @@ export async function PATCH(request: Request, { params }: Ctx) {
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(request: Request, { params }: Ctx) {
+export async function DELETE(_request: Request, context: unknown) {
+  const { params } = (context as { params: { id: string } });
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
